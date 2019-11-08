@@ -34,7 +34,7 @@ login_manager.init_app(app)
 
 REPEATER_LISTENER = ('127.0.0.1', 53555)
 LISTENER_FILE = 'connections.txt'
-listener_thread = server.start(REPEATER_LISTENER, LISTENER_FILE)
+#listener_thread = server.start(REPEATER_LISTENER, LISTENER_FILE)
 
 REPEATER_ACTIONS = yaml.load("""
 ---

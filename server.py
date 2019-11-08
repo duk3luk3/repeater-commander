@@ -1,5 +1,6 @@
 import socket
 import threading
+import sys
 
 def listen(addr, fname):
     BUFFER_SIZE = 1024  # Normally 1024, but we want fast response
@@ -33,3 +34,11 @@ def start(addr, fname):
     thread = threading.Thread(group=None, target=listen, name='Action-Listener', args=(addr,fname))
     thread.start()
     return thread
+
+if __name__ == '__main__':
+    # Threaded option to enable multiple instances for multiple user access support
+    addr = sys.argv[1]
+    port = int(sys.argv[2])
+    fname = sys.argv[3]
+
+    start((addr, port), fname)
