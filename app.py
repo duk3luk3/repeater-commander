@@ -8,11 +8,14 @@ from passlib.hash import pbkdf2_sha256
 
 from forms import LoginForm, ActionForm
 
+import server
+
 import sys
 import secrets
 import yaml
 import json
 import socket
+import os
 
 DB_STR = 'sqlite:///:memory:'
 #DB_STR = "sqlite:///example.sqlite"
@@ -24,12 +27,15 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DB_STR
 app.config["SECRET_KEY"] = app_secret
 
 
+
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 REPEATER_LISTENER = ('127.0.0.1', 53555)
+LISTENER_FILE = 'connections.txt'
+listener_thread = server.start(REPEATER_LISTENER, LISTENER_FILE)
 
 REPEATER_ACTIONS = yaml.load("""
 ---
@@ -205,7 +211,13 @@ def getusers():
 def index():
     form = ActionForm(request.form, csrf_context=session)
 
-    return render_template("index.html",actions=REPEATER_ACTIONS, form=form)
+    if os.path.exists(LISTENER_FILE):
+        with open(LISTENER_FILE) as f:
+            connections = f.read()
+    else:
+        connections = 'No file'
+
+    return render_template("index.html",actions=REPEATER_ACTIONS, form=form, connections=connections)
 
 
 if __name__ == '__main__':

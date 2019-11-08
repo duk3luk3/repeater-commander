@@ -32,6 +32,10 @@ Unlock: <button onclick="javascript:unlock_buttons();">Unlock</button><br>
 {{ form.csrf_token }}
 </form>
 </table>
-
 {% endif %}
+
+Connections:<br>
+<pre>
+{{connections}}
+</pre>
 {% endblock %}
