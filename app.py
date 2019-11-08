@@ -17,16 +17,15 @@ import json
 import socket
 import os
 
+#DB_STR = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
 DB_STR = 'sqlite:///:memory:'
 #DB_STR = "sqlite:///example.sqlite"
 
-app_secret = secrets.token_urlsafe(16)
+app_secret = os.environ.get('APP_SECRET', secrets.token_urlsafe(16))
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_STR
 app.config["SECRET_KEY"] = app_secret
-
-
 
 db = SQLAlchemy(app)
 

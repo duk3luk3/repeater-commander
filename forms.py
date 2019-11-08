@@ -1,14 +1,16 @@
 from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField
 from wtforms.ext.csrf.session import SessionSecureForm
 import secrets
+import os
 
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 
+app_secret = os.environ.get('APP_SECRET', secrets.token_urlsafe(16))
 
 class LoginForm(SessionSecureForm):
     """User Signup Form."""
 
-    SECRET_KEY = secrets.token_urlsafe(16).encode()
+    SECRET_KEY = app_secret
     TIME_LIMIT = None
 
     name = StringField('Name', [
@@ -22,6 +24,6 @@ class LoginForm(SessionSecureForm):
 class ActionForm(SessionSecureForm):
     """User Signup Form."""
 
-    SECRET_KEY = secrets.token_urlsafe(16).encode()
+    SECRET_KEY = app_secret
     TIME_LIMIT = None
 
