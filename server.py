@@ -41,4 +41,6 @@ if __name__ == '__main__':
     port = int(sys.argv[2])
     fname = sys.argv[3]
 
+    print(addr, port, fname)
+
     start((addr, port), fname)
