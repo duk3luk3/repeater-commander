@@ -30,7 +30,7 @@ def listen(addr, fname):
                 f.write("".join(data))
 
             conn.close()
-        except ConnectionResetError e:
+        except ConnectionResetError:
             conn.close()
             pass
 
