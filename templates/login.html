@@ -1,0 +1,26 @@
+<html>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+{% with messages = form.errors %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for field, message in messages.items() %}
+    <li>{{ field}}: {{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+    <form method="POST" action="/login">
+    {{ form.csrf_token }}
+    {{ form.name.label }} {{ form.name(size=20) }}
+    {{ form.password.label }} {{ form.password(size=20) }}
+    {{ form.submit.label }} {{ form.submit(size=20) }}
+    </form>
+</html>

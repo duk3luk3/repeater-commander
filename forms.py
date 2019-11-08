@@ -1,0 +1,27 @@
+from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField
+from wtforms.ext.csrf.session import SessionSecureForm
+import secrets
+
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
+
+
+class LoginForm(SessionSecureForm):
+    """User Signup Form."""
+
+    SECRET_KEY = secrets.token_urlsafe(16).encode()
+    TIME_LIMIT = None
+
+    name = StringField('Name', [
+        DataRequired(message=('Don\'t be shy!'))
+    ])
+    password = PasswordField('Password', validators=[
+        DataRequired(message="Please enter a password."),
+    ])
+    submit = SubmitField('Login')
+
+class ActionForm(SessionSecureForm):
+    """User Signup Form."""
+
+    SECRET_KEY = secrets.token_urlsafe(16).encode()
+    TIME_LIMIT = None
+

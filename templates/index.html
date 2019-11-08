@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Index{% endblock %}
+
+{% block content %}
+<h1>Welcome to the repeater controller</h1>
+
+{% if current_user.is_authenticated %}
+<script type="text/javascript">
+function unlock_buttons() {
+var btns = document.getElementsByTagName('BUTTON');
+console.log(btns);
+for (let btn of btns) {
+  btn.removeAttribute('disabled');
+}
+}
+</script>
+Unlock: <button onclick="javascript:unlock_buttons();">Unlock</button><br>
+<table>
+<form method="POST" action="/action" id="button_form">
+<tr>
+    <td><label for="comment">Comment</td>
+    <td><input type="text" size="100" name="comment"></td>
+</tr>
+<tr><td colspan="2">Action:</td></tr>
+{% for action in actions %}
+<tr>
+    <td><label for="{{ action.key}}">{{ action.label }}</label></td>
+    <td><button type="submit" name="action" value="{{ action.key }}" {% if action.guard %}disabled{% endif %}>{{ action.button }}</button></td>
+</tr>
+{% endfor %}
+{{ form.csrf_token }}
+</form>
+</table>
+
+{% endif %}
+{% endblock %}
