@@ -16,19 +16,23 @@ def listen(addr, fname):
         conn, addr = s.accept()
         data.append(str(addr))
         data.append(' ')
-        while 1:
-            rx = conn.recv(BUFFER_SIZE).decode()
-            data.append(rx)
-            if not rx:
-                break
-            conn.send(b'OK\n')  # echo
+        try:
+            while 1:
+                rx = conn.recv(BUFFER_SIZE).decode()
+                data.append(rx)
+                if not rx:
+                    break
+                conn.send(b'OK\n')  # echo
 
-        data.append('\n')
+            data.append('\n')
 
-        with open(fname, 'a') as f:
-            f.write("".join(data))
+            with open(fname, 'a') as f:
+                f.write("".join(data))
 
-        conn.close()
+            conn.close()
+        except ConnectionResetError e:
+            conn.close()
+            pass
 
 def start(addr, fname):
     thread = threading.Thread(group=None, target=listen, name='Action-Listener', args=(addr,fname))
