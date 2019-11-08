@@ -10,7 +10,7 @@ app_secret = os.environ.get('APP_SECRET', secrets.token_urlsafe(16))
 class LoginForm(SessionSecureForm):
     """User Signup Form."""
 
-    SECRET_KEY = app_secret
+    SECRET_KEY = app_secret.encode()
     TIME_LIMIT = None
 
     name = StringField('Name', [
@@ -24,6 +24,6 @@ class LoginForm(SessionSecureForm):
 class ActionForm(SessionSecureForm):
     """User Signup Form."""
 
-    SECRET_KEY = app_secret
+    SECRET_KEY = app_secret.encode()
     TIME_LIMIT = None
 
