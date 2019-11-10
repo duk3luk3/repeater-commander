@@ -2,6 +2,7 @@
 import flask
 from flask import Flask, request, jsonify, render_template, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func as sql_func
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 
 from passlib.hash import pbkdf2_sha256
@@ -16,9 +17,10 @@ import yaml
 import json
 import socket
 import os
+import traceback
 
-#DB_STR = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
-DB_STR = 'sqlite:///:memory:'
+DB_STR = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
+#DB_STR = 'sqlite:///:memory:'
 #DB_STR = "sqlite:///example.sqlite"
 
 app_secret = os.environ.get('APP_SECRET', secrets.token_urlsafe(16))
@@ -32,9 +34,16 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-REPEATER_LISTENER = ('127.0.0.1', 53555)
-LISTENER_FILE = 'connections.txt'
-listener_thread = server.start(REPEATER_LISTENER, LISTENER_FILE)
+repeater_listen_ip = os.environ.get('LISTENER_IP')
+repeater_listen_port = os.environ.get('LISTENER_PORT')
+
+if repeater_listen_ip:
+    REPEATER_LISTENER = (repeater_listen_ip, int(repeater_listen_port))
+else:
+    # For debugging - start dummy listener
+    REPEATER_LISTENER = ('127.0.0.1', 53555)
+    LISTENER_FILE = 'connections.txt'
+    listener_thread = server.start(REPEATER_LISTENER, LISTENER_FILE)
 
 REPEATER_ACTIONS = yaml.load("""
 ---
@@ -52,6 +61,11 @@ REPEATER_ACTIONS = yaml.load("""
   label: Stop Monitoring
   button: Stop
   guard: no
+  comment: no
+- key: Shutdown_2
+  label: Shutdown Repeater for 2 minutes (for testing)
+  button: Send Shutdown
+  guard: yes
   comment: no
 - key: Shutdown_10
   label: Shutdown Repeater for 10 minutes
@@ -109,8 +123,24 @@ class User(db.Model):
 
 class LogEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    ts = db.Column(db.DateTime())
+    ts = db.Column(db.DateTime(timezone=True), server_default=sql_func.now())
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_ip = db.Column(db.String(128))
+    action = db.Column(db.String(128))
+    comment = db.Column(db.String(128))
+    submitted = db.Column(db.Boolean)
+    submit_result = db.Column(db.String(128))
+    user = db.relationship("User")
+
+    def from_action(action_dict, user):
+        ev = LogEvent()
+        ev.user = user
+        ev.user_ip = action_dict['ip']
+        ev.action = action_dict['action']
+        ev.comment = action_dict['comment']
+        ev.submitted = action_dict['submitted']
+        ev.submit_result = action_dict['submit_result']
+        return ev
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -122,10 +152,21 @@ def find_user(user_name):
 @app.before_first_request
 def init_app():
     db.Model.metadata.create_all(db.engine)
-    user = User(username="test")
-    user.set_password('1234')
-    db.session.add(user)
-    db.session.commit()
+
+    users = os.environ.get('APP_CREATE_USERS')
+
+    if users:
+        users = users.split(':')
+        for user_name in users:
+            user_rec = find_user(user_name)
+            if not user_rec:
+                user_pw = secrets.token_urlsafe(16)
+                print(f'Creating user: {user_name}:{user_pw}')
+                user = User(username=user_name)
+                user.set_password(user_pw)
+                db.session.add(user)
+        db.session.commit()
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -200,23 +241,60 @@ def action():
     return jsonify(action_data)
 
 
-@app.route('/getusers/', methods=['GET'])
-def getusers():
-    users = User.query.all()
-    return jsonify([u.asdict() for u in users])
-
 # A welcome message to test our server
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     form = ActionForm(request.form, csrf_context=session)
 
-    if os.path.exists(LISTENER_FILE):
-        with open(LISTENER_FILE) as f:
-            connections = f.read()
-    else:
-        connections = 'No file'
+    if request.method == 'POST' and form.validate() and current_user.is_authenticated:
+        comment_value = request.form['comment']
+        action_value = request.form['action']
+        user_name = current_user.username
+        user_ip = request.remote_addr
 
-    return render_template("index.html",actions=REPEATER_ACTIONS, form=form, connections=connections)
+        action_data = dict(comment=comment_value, action=action_value, user=user_name, ip=user_ip)
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(REPEATER_LISTENER)
+            s.send(json.dumps(action_data).encode())
+            try:
+                rx = s.recv(1024)
+            except ConnectionResetError:
+                pass
+            s.close()
+
+            if len(rx) > 0:
+                action_data['submitted'] = True
+                action_data['submit_result'] = "Server reply: " + rx.decode()
+            else:
+                action_data['submitted'] = True
+                action_data['submit_result'] = '<Unknown - no reply>'
+
+        except Exception as e:
+            traceback.print_exc(file=sys.stderr)
+            action_data['submitted'] = False
+            action_data['submit_result'] = 'Exception while sending: ' + str(e)
+
+        ev = LogEvent.from_action(action_data, current_user)
+        db.session.add(ev)
+        db.session.commit()
+    else:
+        action_data = None
+
+    connections = ''
+    logs = []
+
+    if current_user.is_authenticated:
+        if os.path.exists(LISTENER_FILE):
+            with open(LISTENER_FILE) as f:
+                connections = f.read()
+        else:
+            connections = 'No file'
+
+        logs = LogEvent.query.order_by(LogEvent.ts.desc()).limit(10).all()
+
+    return render_template("index.html",actions=REPEATER_ACTIONS, form=form, connections=connections, logs=logs, action=action_data)
 
 
 if __name__ == '__main__':

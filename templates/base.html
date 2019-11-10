@@ -2,10 +2,15 @@
 <html>
 	<head>
             <title>{% block title %}{% endblock %}</title>
+<style>
+th {
+    text-align: left;
+}
+</style>
 	</head>
 	<body>
 <nav>
-  <h1>Flaskr</h1>
+    <h1>Repeater Controller</h1>
   <ul>
     {% if current_user.is_authenticated %}
       <li><span>{{ current_user.username }}</span>

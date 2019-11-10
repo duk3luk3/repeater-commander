@@ -3,7 +3,7 @@
 {% block title %}Index{% endblock %}
 
 {% block content %}
-<h1>Welcome to the repeater controller</h1>
+<h2>Welcome to the repeater controller</h2>
 
 {% if current_user.is_authenticated %}
 <script type="text/javascript">
@@ -15,9 +15,10 @@ for (let btn of btns) {
 }
 }
 </script>
+<h3>Actions</h3>
 Unlock: <button onclick="javascript:unlock_buttons();">Unlock</button><br>
 <table>
-<form method="POST" action="/action" id="button_form">
+<form method="POST" action="/" id="button_form">
 <tr>
     <td><label for="comment">Comment</td>
     <td><input type="text" size="100" name="comment"></td>
@@ -34,7 +35,30 @@ Unlock: <button onclick="javascript:unlock_buttons();">Unlock</button><br>
 </table>
 {% endif %}
 
-Connections:<br>
+{% if action %}
+<h3>Action processed:</h3>
+<table>
+<tr><td>User</td><td>{{ action.user }}</td></tr>
+<tr><td>User IP</td><td>{{ action.ip }}</td></tr>
+<tr><td>Command</td><td>{{ action.action }}</td></tr>
+<tr><td>Comment</td><td>{{ action.comment }}</td></tr>
+
+<tr><td>Submitted to server:</td><td> {{action.submitted}}</td></tr>
+<tr><td>Submit result:</td><td> {{ action.submit_result }}</td></tr>
+</table>
+{% endif %}
+
+{% if logs %}
+<h3>Logs:</h3>
+<table>
+<tr><th>Timestamp</th><th>Username</th><th>Command + Comment</th><th>Submitted + Submit result</th></tr>
+{% for log in logs %}
+<tr><td>{{ log.ts }}</td><td>{{log.user.username}}</td><td>{{log.action}} {{log.comment}}</td><td>{{log.submitted}} {{log.submit_result }}</td></tr>
+{% endfor %}
+</table>
+{% endif %}
+
+<h3>Debug: Connections</h3>
 <pre>
 {{connections}}
 </pre>
