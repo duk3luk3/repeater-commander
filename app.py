@@ -269,7 +269,10 @@ def index():
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(REPEATER_LISTENER)
             sleep(0.3)
-            s.send(json.dumps(action_data).encode())
+            msg = json.dumps(action_data).encode()
+            msg_len = len(msg)
+            print(f'Sending {msg_len}b message: {msg}', file=sys.stderr)
+            s.send(msg)
             sleep(0.3)
             try:
                 rx = s.recv(1024)
