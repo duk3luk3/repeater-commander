@@ -18,6 +18,7 @@ import json
 import socket
 import os
 import traceback
+from time import sleep
 
 DB_STR = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
 #DB_STR = 'sqlite:///:memory:'
@@ -267,7 +268,9 @@ def index():
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(REPEATER_LISTENER)
+            sleep(0.3)
             s.send(json.dumps(action_data).encode())
+            sleep(0.3)
             try:
                 rx = s.recv(1024)
             except ConnectionResetError:
