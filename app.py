@@ -142,6 +142,13 @@ class LogEvent(db.Model):
         ev.submit_result = action_dict['submit_result']
         return ev
 
+def get_client_ip():
+    proxy_ip = request.headers.get('X-Forward-For')
+    if proxy_ip:
+        return proxy_ip
+    else:
+        return request.remote_addr
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter(User.id == user_id).one_or_none()
@@ -250,7 +257,7 @@ def index():
         comment_value = request.form['comment']
         action_value = request.form['action']
         user_name = current_user.username
-        user_ip = request.remote_addr
+        user_ip = get_client_ip()
 
         action_data = dict(comment=comment_value, action=action_value, user=user_name, ip=user_ip)
 
