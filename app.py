@@ -39,6 +39,7 @@ repeater_listen_port = os.environ.get('LISTENER_PORT')
 
 if repeater_listen_ip:
     REPEATER_LISTENER = (repeater_listen_ip, int(repeater_listen_port))
+    LISTENER_FILE = ''
 else:
     # For debugging - start dummy listener
     REPEATER_LISTENER = ('127.0.0.1', 53555)
