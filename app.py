@@ -262,6 +262,8 @@ def index():
 
         action_data = dict(comment=comment_value, action=action_value, user=user_name, ip=user_ip)
 
+        rx = ""
+
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(REPEATER_LISTENER)
@@ -269,6 +271,7 @@ def index():
             try:
                 rx = s.recv(1024)
             except ConnectionResetError:
+                traceback.print_exc(file=sys.stderr)
                 pass
             s.close()
 
