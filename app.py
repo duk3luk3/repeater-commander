@@ -143,7 +143,7 @@ class LogEvent(db.Model):
         return ev
 
 def get_client_ip():
-    proxy_ip = request.headers.get('X-Forward-For')
+    proxy_ip = request.headers.get('X-Forwarded-For')
     if proxy_ip:
         return proxy_ip
     else:
