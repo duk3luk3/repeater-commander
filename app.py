@@ -267,15 +267,30 @@ def index():
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(10.0)
+
             s.connect(REPEATER_LISTENER)
-            sleep(0.3)
-            msg = json.dumps(action_data).encode()
+
+            try:
+                hello_msg = s.recv(5)
+                print(f'hello msg: {hello_msg}', file=sys.stderr)
+            except socket.timeout:
+                traceback.print_exc(file=sys.stderr)
+
+            send_delay = request.form.get('test_send_delay') or 0
+            sleep(int(send_delay))
+            if action_value == 'test_send':
+                msg = comment_value.encode()
+            else:
+                msg = json.dumps(action_data).encode()
             msg_len = len(msg)
             print(f'Sending {msg_len}b message: {msg}', file=sys.stderr)
             s.send(msg)
-            sleep(0.3)
+            recv_delay = request.form.get('test_recv_delay') or 0
+            sleep(int(recv_delay))
+
             try:
-                rx = s.recv(1024)
+                rx = s.recv(2)
             except ConnectionResetError:
                 traceback.print_exc(file=sys.stderr)
                 pass
@@ -291,7 +306,7 @@ def index():
         except Exception as e:
             traceback.print_exc(file=sys.stderr)
             action_data['submitted'] = False
-            action_data['submit_result'] = 'Exception while sending: ' + str(e)
+            action_data['submit_result'] = 'Unexpected error while sending: ' + str(e)
 
         ev = LogEvent.from_action(action_data, current_user)
         db.session.add(ev)
