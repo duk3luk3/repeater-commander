@@ -277,17 +277,18 @@ def index():
             except socket.timeout:
                 traceback.print_exc(file=sys.stderr)
 
-            send_delay = request.form.get('test_send_delay') or 0
-            sleep(int(send_delay))
-            if action_value == 'test_send':
-                msg = comment_value.encode()
-            else:
-                msg = json.dumps(action_data).encode()
+            #send_delay = request.form.get('test_send_delay') or 0
+            #sleep(int(send_delay))
+            #if action_value == 'test_send':
+            #    msg = comment_value.encode()
+            #else:
+            #    msg = json.dumps(action_data).encode()
+            msg = json.dumps(action_data).encode()
             msg_len = len(msg)
             print(f'Sending {msg_len}b message: {msg}', file=sys.stderr)
             s.send(msg)
-            recv_delay = request.form.get('test_recv_delay') or 0
-            sleep(int(recv_delay))
+            #recv_delay = request.form.get('test_recv_delay') or 0
+            #sleep(int(recv_delay))
 
             try:
                 rx = s.recv(2)

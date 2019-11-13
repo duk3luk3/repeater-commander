@@ -30,9 +30,11 @@ Unlock: <button onclick="javascript:unlock_buttons();">Unlock</button><br>
     <td><button type="submit" name="action" value="{{ action.key }}" {% if action.guard %}disabled{% endif %}>{{ action.button }}</button></td>
 </tr>
 {% endfor %}
+{##
 <tr><td><label for="test_send_delay">Test send wait after connect</label></td><td><input type="text" name="test_send_delay"></td></tr>
 <tr><td><label for="test_recv_delay">Test send wait after send</label></td><td><input type="text" name="test_recv_delay"></td></tr>
 <tr><td><label for="test_send">Test send</label></td><td><button type="submit" name="action" value="test_send"></td></tr>
+##}
 {{ form.csrf_token }}
 </form>
 </table>
