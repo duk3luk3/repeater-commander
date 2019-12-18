@@ -20,6 +20,9 @@ import os
 import traceback
 from time import sleep
 
+from openssl_psk import patch_context
+from OpenSSL.SSL import Context, Connection, TLSv1_2_METHOD
+
 DB_STR = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
 #DB_STR = 'sqlite:///:memory:'
 #DB_STR = "sqlite:///example.sqlite"
@@ -37,6 +40,17 @@ login_manager.init_app(app)
 
 repeater_listen_ip = os.environ.get('LISTENER_IP')
 repeater_listen_port = os.environ.get('LISTENER_PORT')
+repeater_listen_psk = os.environ.get('LISTENER_PSK')
+
+patch_context()
+
+def client_callback(conn, identity_hint):
+    if repeater_listen_psk:
+        psk = repeater_listen_psk.encode()
+    else:
+        psk = b'+1QmFSmZRp+lnYw0y/bROSctNkzOKE45'
+
+    return (b'client', psk)
 
 if repeater_listen_ip:
     REPEATER_LISTENER = (repeater_listen_ip, int(repeater_listen_port))
@@ -46,6 +60,7 @@ else:
     REPEATER_LISTENER = ('127.0.0.1', 53555)
     LISTENER_FILE = 'connections.txt'
     listener_thread = server.start(REPEATER_LISTENER, LISTENER_FILE)
+
 
 REPEATER_ACTIONS = yaml.load("""
 ---
@@ -267,7 +282,12 @@ def index():
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(10.0)
+            #s.settimeout(10.0)
+            if repeater_listen_psk:
+                ctx = Context(TLSv1_2_METHOD)
+                ctx.set_cipher_list(b'PSK')
+                ctx.set_psk_client_callback(client_callback)
+                s = Connection(ctx, s)
 
             s.connect(REPEATER_LISTENER)
 

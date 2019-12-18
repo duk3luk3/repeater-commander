@@ -13,3 +13,4 @@ PyYAML==5.1.2
 SQLAlchemy==1.3.10
 Werkzeug==0.16.0
 WTForms==2.2.1
+pyopenssl-psk==1.0.0
