@@ -281,6 +281,7 @@ def index():
         rx = ""
 
         try:
+            print('Creating socket', file=sys.stderr)
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             #s.settimeout(10.0)
             if repeater_listen_psk:
@@ -288,8 +289,11 @@ def index():
                 ctx.set_cipher_list(b'PSK')
                 ctx.set_psk_client_callback(client_callback)
                 s = Connection(ctx, s)
+                print('PSK Context created', file=sys.stderr)
 
+            print('Connecting:', REPEATER_LISTENER)
             s.connect(REPEATER_LISTENER)
+            print('Connected')
 
             try:
                 hello_msg = s.recv(5)
